@@ -1,9 +1,8 @@
-const express = require('express');
-const path = require('path');
 const fs = require('fs');
 const reviews = require('./db/reviews.json');
+const express = require('express');
 // Helper method for generating unique ids
-const uuid = require('./helpers/uuid');
+// commented out const uuid = require('./helpers/uuid');
 
 const PORT = 3001;
 
@@ -13,10 +12,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
-
-app.get('/', (req, res) =>
-  res.sendFile(path.join(__dirname, '/public/index.html'))
-);
 
 // GET request for reviews
 app.get('/api/reviews', (req, res) => {
@@ -50,18 +45,16 @@ app.get('/api/reviews/:review_id', (req, res) => {
 app.post('/api/reviews', (req, res) => {
   // Log that a POST request was received
   console.info(`${req.method} request received to add a review`);
-
+  console.log(req);
   // Destructuring assignment for the items in req.body
-  const { product, review, username } = req.body;
+  const { title, text } = req.body;
 
   // If all the required properties are present
-  if (product && review && username) {
+  if (title && text) {
     // Variable for the object we will save
     const newReview = {
-      product,
-      review,
-      username,
-      review_id: uuid(),
+      title,
+      text,
     };
 
     // Obtain existing reviews
@@ -99,33 +92,14 @@ app.post('/api/reviews', (req, res) => {
   }
 });
 
-// GET request for upvotes
-app.get('/api/upvotes', (req, res) => {
-  // Inform the client
-  res.json(`${req.method} request received to retrieve upvote count`);
-
-  // Log our request to the terminal
-  console.info(`${req.method} request received to retrieve upvote count`);
-});
-
-// Post request to upvote a review
-app.post('/api/upvotes/:review_id', (req, res) => {
-  // Log our request to the terminal
-  if (req.body && req.params.review_id && req.body.upvote) {
-    console.info(`${req.method} request received to upvote a review`);
-
-    // Log the request body
-    console.info(req.body);
-
+app.delete('/api/reviews/:review_id', (req, res) => {
+  if (req.body && req.params.review_id) {
+    console.info(`${req.method} request received to get a single a review`);
     const reviewId = req.params.review_id;
-    const requestedUpvote = req.body.upvote;
-
     for (let i = 0; i < reviews.length; i++) {
       const currentReview = reviews[i];
-      // console.log(currentReview.review_id, reviewId);
-      if (currentReview.review_id === reviewId && requestedUpvote) {
-        currentReview.upvotes += 1;
-        res.json(`New upvote count is: ${currentReview.upvotes}`);
+      if (currentReview.review_id === reviewId) {
+        res.json(currentReview);
         return;
       }
     }
